@@ -1,0 +1,67 @@
+#Genome equivalents	##MicrobeCensus v1.1.0
+	run_microbe_census.py $SAMPLE.CoupledReads.fa.gz $SAMPLE.genome_equivalents -t 1
+	awk '/genome_equivalents:/' $SAMPLE.genome_equivalents | awk -F'\t' '{print $2}' > $SAMPLE.genomeequi.value
+
+#ARG annotation based on clean reads    ##DIAMOND
+	diamond blastx -q $input/$SAMPLE.CoupledReads.fa.gz -d 02.Database/SARG/SARG.2.2.diamondv0.9.24.dmnd -o $out/$SAMPLE.blastout -f 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qlen slen qcovhsp --max-target-seqs 5 --threads 1
+	
+	#best hit    ##BlastTab.best_hit_sorted.pl (http://enve-omics.ce.gatech.edu/enveomics/docs?t=BlastTab.best_hit_sorted.pl)
+	perl Scripts/BlastTab.best_hit_sorted.pl $SAMPLE.blastout > $SAMPLE.ARG.blastout.bh
+		
+	#filter blastx result
+	awk '$11<=1e-7' $SAMPLE.ARG.blastout.bh > $SAMPLE.ARG.blastout.bh.1e-7
+	awk '$4>=25' $SAMPLE.ARG.blastout.bh.1e-7 > $SAMPLE.ARG.blastout.bh.1e-7.aa25
+	awk '$3>=90' $SAMPLE.ARG.blastout.bh.1e-7.aa25 > $SAMPLE.ARG.blastout.bh.1e-7.aa25.id90
+	
+#Taxonomic classification based on clean reads    ##kraken2 v2.1.2+Bracken v2.7
+	#kraken2
+	for i in $(cat list); do 
+    kraken2 --db 02.Database/bracken/ --threads 10 --report $i.kreport --output $i.koutput --confidence 0.05 --gzip-compressed --report-zero-counts --use-names --paired $i/$i.1.fq.gz $i/$i.2.fq.gz; 
+  done
+	
+	#Bracken    ##Level=D/P/C/O/F/G/S
+	for i in $(cat list); do 
+    Level=P; bracken -d 02.Database/bracken/ -i $i.kreport -o $i.$Level.bracken -w $i.$Level.bracken.report -r 150 -l $Level; 
+  done
+
+	for i in $(cat list); do 
+    cut -f1,6 $i/$i.P.bracken | sed '1d' | grep -v 'Chordata' > $i/$i.P.bracken.out; 
+    cut -f1,6 $i/$i.C.bracken | sed '1d' | grep -v 'Mammalia' > $i/$i.C.bracken.out; 
+    cut -f 1,6 $i/$i.O.bracken | sed '1d' | grep -v 'Primates' > $i/$i.O.bracken.out; 
+    cut -f1,6 $i/$i.F.bracken | sed '1d' | grep -v 'Hominidae' > $i/$i.F.bracken.out; 
+    cut -f1,6 $i/$i.G.bracken | sed '1d' | grep -v 'Homo' > $i/$i.G.bracken.out; 
+    cut -f1,6 $i/$i.S.bracken | sed '1d' | grep -v 'Homo sapiens' > $i/$i.S.bracken.out; 
+  done
+	
+#Assembly (contigs)    ##MEGAHIT v1.2.9    ##quast
+	megahit --12 $SAMPLE.CoupledReads.fa.gz -o $SAMPLE -t 10 --out-prefix $SAMPLE --min-contig-len 500
+	quast -o quast/ -t 10 *.fa
+	
+	#Taxonomic classification based on contigs
+	kraken2 --db 02.Database/bracken/ --threads 10 --report OF.ctgs.kreken2.report --output OF.ctgs.kreken2.koutput --confidence 0.05  contigs.fa
+	kreport2krona.py -r OF.ctgs.kreken2.report -o OF.ctgs.kreken2.report.txt
+	perl KronaTools-2.8/scripts/ImportText.pl OF.ctgs.kreken2.report.txt
+	
+#Predict ORFs    ##prodigal v2.6.3
+	prodigal -i $SAMPLE.contigs.fa -a $SAMPLE.faa -d $SAMPLE.fna -p meta -o $SAMPLE.gff -f gff
+
+#MAGs annotation
+	#Binning    ##metaWRAP
+	metawrap binning -a $SAMPLE.contigs.fa -l 1000 -t 10 -o $output --concoct --maxbin2 --metabat2  $SAMPLE*.fastq
+	
+	#Bin Refinement
+	metawrap bin_refinement -o $output -A $A/ -B $B/ -C $C/ -t 10 -c 90 -x 5
+	
+	#Bin dRep    ##dRep
+	dRep dereplicate dRep_result/ -g *.fa -sa 0.95 -nc 0.30 -p 10 --ignoreGenomeQuality
+
+	#MAGs quality    ##CheckM
+	for i in $(cat list); do checkm lineage_wf $i/reassembled_bins/ $i/reassembled_bins.checkm/ -t 20 -x fa --tab_table -f $i/reassembled_bins.checkm/$i.checkm.txt; done
+	
+	#Taxonomic classification of MAGs    ##GTDB_tk (reference data version r207)
+	gtdbtk classify_wf --genome_dir ./ --out_dir 04.BIN_CLASSIFICATION/ --extension fa --prefix Bins --cpus 40
+	gtdbtk infer --msa_file Bins.bac120.user_msa.fasta.gz --out_dir ./ --cpus 10 --prefix Tree
+	
+	#KEGG annotation
+	conda activate kofamscan
+	nohup exec_annotation -f mapper --cpu 80 -o dRep/orfs.txt bins.orfs.faa -p 02.Database/kegg220921/profiles/ -k 02.Database/kegg220921/ko_list -E 1e-5 &
