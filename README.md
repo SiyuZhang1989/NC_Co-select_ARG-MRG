@@ -11,6 +11,6 @@ Zi-Teng Liu <sup>1</sup>, Rui-Ao Ma <sup>1</sup>, Dong Zhu <sup>2</sup>, Konstan
 
 Corresponding author: Si-Yu Zhang (syzhang@des.ecnu.edu.cn)
 
-This repository contains R code for classifying samples, python code for machine learning and other analysis code or scripts in the manuscript "Genetic-linkage proof reveals organic fertilization co-selects for antibiotic and metal resistance genes in the global agricultural soil microbiome".
+This repository contains R code for classifying samples, python code for machine learning and other analysis code or scripts in the manuscript "Genetic-linkage proof reveals organic fertilization co-selects for antibiotic and metal resistance genes in the global agricultural soil microbiome". If you have any other inquiries or needs related to the article, please do not hesitate to contact us (syzhang@des.ecnu.edu.cn or liuziteng1006@163.com).
 
 The code and scripts provided here may only be used for academic exchange and are not permitted for commercial use.
