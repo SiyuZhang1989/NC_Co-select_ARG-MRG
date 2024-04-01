@@ -16,22 +16,22 @@
 #Taxonomic classification based on clean reads    ##kraken2 v2.1.2+Bracken v2.7
 	#kraken2
 	for i in $(cat list); do 
-    kraken2 --db 02.Database/bracken/ --threads 10 --report $i.kreport --output $i.koutput --confidence 0.05 --gzip-compressed --report-zero-counts --use-names --paired $i/$i.1.fq.gz $i/$i.2.fq.gz; 
-  done
+		kraken2 --db 02.Database/bracken/ --threads 10 --report $i.kreport --output $i.koutput --confidence 0.05 --gzip-compressed --report-zero-counts --use-names --paired $i/$i.1.fq.gz $i/$i.2.fq.gz; 
+	done
 	
 	#Bracken    ##Level=D/P/C/O/F/G/S
 	for i in $(cat list); do 
-    Level=P; bracken -d 02.Database/bracken/ -i $i.kreport -o $i.$Level.bracken -w $i.$Level.bracken.report -r 150 -l $Level; 
-  done
+		Level=P; bracken -d 02.Database/bracken/ -i $i.kreport -o $i.$Level.bracken -w $i.$Level.bracken.report -r 150 -l $Level; 
+	done
 
 	for i in $(cat list); do 
-    cut -f1,6 $i/$i.P.bracken | sed '1d' | grep -v 'Chordata' > $i/$i.P.bracken.out; 
-    cut -f1,6 $i/$i.C.bracken | sed '1d' | grep -v 'Mammalia' > $i/$i.C.bracken.out; 
-    cut -f 1,6 $i/$i.O.bracken | sed '1d' | grep -v 'Primates' > $i/$i.O.bracken.out; 
-    cut -f1,6 $i/$i.F.bracken | sed '1d' | grep -v 'Hominidae' > $i/$i.F.bracken.out; 
-    cut -f1,6 $i/$i.G.bracken | sed '1d' | grep -v 'Homo' > $i/$i.G.bracken.out; 
-    cut -f1,6 $i/$i.S.bracken | sed '1d' | grep -v 'Homo sapiens' > $i/$i.S.bracken.out; 
-  done
+		cut -f1,6 $i/$i.P.bracken | sed '1d' | grep -v 'Chordata' > $i/$i.P.bracken.out; 
+		cut -f1,6 $i/$i.C.bracken | sed '1d' | grep -v 'Mammalia' > $i/$i.C.bracken.out; 
+		cut -f 1,6 $i/$i.O.bracken | sed '1d' | grep -v 'Primates' > $i/$i.O.bracken.out; 
+		cut -f1,6 $i/$i.F.bracken | sed '1d' | grep -v 'Hominidae' > $i/$i.F.bracken.out; 
+		cut -f1,6 $i/$i.G.bracken | sed '1d' | grep -v 'Homo' > $i/$i.G.bracken.out; 
+		cut -f1,6 $i/$i.S.bracken | sed '1d' | grep -v 'Homo sapiens' > $i/$i.S.bracken.out; 
+	done
 	
 #Assembly (contigs)    ##MEGAHIT v1.2.9    ##quast
 	megahit --12 $SAMPLE.CoupledReads.fa.gz -o $SAMPLE -t 10 --out-prefix $SAMPLE --min-contig-len 500
