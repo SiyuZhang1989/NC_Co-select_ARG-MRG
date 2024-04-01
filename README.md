@@ -2,3 +2,5 @@
 Title: Genetic-linkage proof reveals organic fertilization co-selects for antibiotic and metal resistance genes in the global agricultural soil microbiome
 
 This repository contains R code for classifying samples, python code for machine learning and other analysis code or scripts in the manuscript "Genetic-linkage proof reveals organic fertilization co-selects for antibiotic and metal resistance genes in the global agricultural soil microbiome".
+
+The code and scripts provided here may only be used for academic exchange and are not permitted for commercial use.
