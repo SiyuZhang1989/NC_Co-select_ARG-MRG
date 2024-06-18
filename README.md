@@ -16,4 +16,4 @@ This repository contains R code for classifying samples, python code for machine
 The code and scripts provided here may only be used for academic exchange and are not permitted for commercial use.
 
 ## Citation
-Liu, ZT., Ma, RA., Zhu, D. et al. Organic fertilization co-selects genetically linked antibiotic and metal(loid) resistance genes in global soil microbiome. *Nat Commun* ##15##, 5168 (2024). https://doi.org/10.1038/s41467-024-49165-5
+Liu, ZT., Ma, RA., Zhu, D. et al. Organic fertilization co-selects genetically linked antibiotic and metal(loid) resistance genes in global soil microbiome. *Nat Commun* **15**, 5168 (2024). https://doi.org/10.1038/s41467-024-49165-5
